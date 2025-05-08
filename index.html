@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <title>Nubra.io | Chart View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+
+  <!-- TradingView scripts -->
+  <script src="charting_library/charting_library.standalone.js"></script>
+  <script src="datafeeds/udf/dist/bundle.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #tv_chart_container {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+<div id="tv_chart_container"></div>
+<script>
+  alert("some content")
+  let widget;
+  let currentSymbol = 'AAPL';
+  let currentInterval = '1D';
+  let theme = 'dark';
+
+  const getOverrides = (theme) => {
+    if (theme === 'dark') {
+      return {
+        'paneProperties.background': '#0e0e0e',
+        'paneProperties.vertGridProperties.color': '#1e1e1e',
+        'scalesProperties.textColor': '#AAA',
+        'mainSeriesProperties.candleStyle.wickUpColor': '#C8CDFF',
+        'mainSeriesProperties.candleStyle.wickDownColor': '#ef5350',
+      };
+    } else {
+      return {
+        'paneProperties.background': '#ffffff',
+        'paneProperties.vertGridProperties.color': '#e3e3e3',
+        'scalesProperties.textColor': '#444',
+      };
+    }
+  };
+
+  /**
+   * @param message be like { type: 'CHART_READY', status: 'success' };
+   * */
+  function notifyReactNative(message) {
+    window.ReactNativeWebView.postMessage(JSON.stringify(message));
+  }
+
+  function notifyWebView(message) {
+    if (window.ReactNativeWebView) {
+      notifyReactNative(message)
+    }
+  }
+
+  const renderWidget = async () => {
+    if (widget) await widget.remove();
+
+    const datafeedUrl = "https://demo-feed-data.tradingview.com";
+
+    widget = new TradingView.widget({
+      debug: false,
+      fullscreen: true,
+      symbol: currentSymbol,
+      interval: currentInterval,
+      container: "tv_chart_container",
+      datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl),
+      library_path: "charting_library/",
+      locale: "en",
+      disabled_features: [
+        "use_localstorage_for_settings",
+        "header_symbol_search",
+        "header_compare",
+        "header_screenshot",
+        "header_undo_redo",
+        "header_saveload",
+        "header_fullscreen_button",
+        "side_toolbar_in_fullscreen_mode",
+        "volume_force_overlay",
+        "timeframes_toolbar",
+      ],
+      widgetbar: {
+        watchlist: true,
+        watchlist_settings: {
+          default_symbols: ["AAPL", "IBM", "MSFT"],
+          readonly: true,
+        },
+      },
+      enabled_features: ["study_templates"],
+      charts_storage_url: 'https://saveload.tradingview.com',
+      charts_storage_api_version: "1.1",
+      client_id: 'tradingview.com',
+      user_id: 'public_user_id',
+      theme: theme,
+      overrides: getOverrides(theme),
+    });
+
+    document.querySelectorAll('.toggleButton-OhcB9eH7').forEach(element => {
+      element.style.display = 'none';
+    });
+
+    widget.headerReady().then(function () {
+      //Orientation Button
+      const orientationBase64 = "PHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDEyMi44OCAxMDYuNDMiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDEyMi44OCAxMDYuNDM7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4gPHN0eWxlIHR5cGU9InRleHQvY3NzIj4gLnN0MHtmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDt9IDwvc3R5bGU+IDxnPiA8cGF0aCBmaWxsPSIjZmZmIiBjbGFzcz0ic3QwIiBkPSJNMTEuMSwwaDM1LjYzYzMuMDUsMCw1Ljg1LDEuMjUsNy44NSwzLjI1YzIuMDMsMi4wMywzLjI1LDQuOCwzLjI1LDcuODV2MzEuNDZoLTMuMTlWMTIuMThIMy4xNXY3NS4yNmwwLDAgaDcuNjF2MTEuNjFjMCwxLjU4LDAuMjcsMy4xLDAuNzcsNC41MUgxMS4xYy0zLjA1LDAtNS44NS0xLjI1LTcuODUtMy4yNUMxLjIyLDk4LjI3LDAsOTUuNTEsMCw5Mi40NVYxMS4xIGMwLTMuMDUsMS4yNS01Ljg1LDMuMjUtNy44NUM1LjI4LDEuMjIsOC4wNCwwLDExLjEsMEwxMS4xLDBMMTEuMSwweiBNOTQuOTUsMzMuNDVjLTAuMzctNS44LTIuNjQtMTAuNTYtNi4wNi0xMy45NyBjLTMuNjQtMy42My04LjU5LTUuNzQtMTMuOTQtNS45M2wyLjQ2LDIuOTVjMC43MywwLjg4LDAuNjIsMi4xOC0wLjI2LDIuOTFjLTAuODgsMC43My0yLjE4LDAuNjItMi45MS0wLjI2bC01LjcyLTYuODVsMCwwIGMtMC43Mi0wLjg2LTAuNjItMi4xNCwwLjIyLTIuODhsNi43MS01Ljg5YzAuODYtMC43NSwyLjE2LTAuNjYsMi45MSwwLjE5YzAuNzUsMC44NiwwLjY2LDIuMTYtMC4xOSwyLjkxbC0zLjE2LDIuNzggYzYuNDMsMC4yMSwxMi40LDIuNzUsMTYuOCw3LjEzYzQuMDcsNC4wNiw2Ljc5LDkuNjksNy4yNSwxNi40OWwyLjU4LTMuMDhjMC43My0wLjg4LDIuMDQtMC45OSwyLjkxLTAuMjYgYzAuODgsMC43MywwLjk5LDIuMDQsMC4yNiwyLjkxbC01LjczLDYuODRjLTAuNzIsMC44Ni0xLjk5LDAuOTktMi44NywwLjI5bC02Ljk4LTUuNTZjLTAuODktMC43MS0xLjA0LTIuMDEtMC4zMy0yLjkxIGMwLjcxLTAuODksMi4wMS0xLjA0LDIuOTEtMC4zM0w5NC45NSwzMy40NUw5NC45NSwzMy40NXogTTEyMi44OCw1OS43djM1LjYzYzAsMy4wNS0xLjI1LDUuODUtMy4yNSw3Ljg1IGMtMi4wMywyLjAzLTQuOCwzLjI1LTcuODUsMy4yNWgtNzguOWMtMy4wNSwwLTUuODUtMS4yNS03Ljg1LTMuMjVjLTIuMDMtMi4wMy0zLjI1LTQuOC0zLjI1LTcuODVWNTkuN2MwLTMuMDUsMS4yNS01Ljg1LDMuMjUtNy44NSBjMi4wMy0yLjAzLDQuNzktMy4yNSw3Ljg1LTMuMjVoNzguOWMzLjA1LDAsNS44NSwxLjI1LDcuODUsMy4yNUMxMjEuNjYsNTMuODgsMTIyLjg4LDU2LjY0LDEyMi44OCw1OS43TDEyMi44OCw1OS43TDEyMi44OCw1OS43eiBNMzUuNDEsNzcuNDljMCwyLjUxLTIuMDMsNC41Ny00LjU3LDQuNTdjLTIuNTEsMC00LjU3LTIuMDMtNC41Ny00LjU3YzAtMi41MSwyLjAzLTQuNTcsNC41Ny00LjU3IEMzMy4zNiw3Mi45MiwzNS40MSw3NC45NSwzNS40MSw3Ny40OUwzNS40MSw3Ny40OUwzNS40MSw3Ny40OXogTTM3Ljg4LDUxLjc1djUxLjQ5aDcyLjgyVjUxLjc1SDM3Ljg4TDM3Ljg4LDUxLjc1eiIvPiA8L2c+IDwvc3ZnPg=="
+      let OrientationButton = widget.createButton();
+      OrientationButton.innerHTML = `<img src="data:image/svg+xml;base64,${orientationBase64}" width="20" height="20" />`;
+      OrientationButton.title = "Change Orientation";
+      OrientationButton.addEventListener("click", function () {
+        notifyWebView({name: 'CHANGE_ORIENTATION'});
+      });
+
+      //Toolbar Toggler
+      const toolbarBase64 = "PHN2ZyBmaWxsPSIjZmZmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgNDc5Ljk4MSA0NzkuOTgxIj4gPGc+IDxnPiA8Zz4gPHBhdGggZD0iTTQ2Mi40NjcsMzUuNjdsLTE1LjQyMS0xOC43NzhjLTE2LjI5Mi0xOS43NTctNDUuNjA0LTIyLjU5Ni02NS4zMzUtNi4zM2wtMTg1LjU2LDE1Mi43NjUgYy0yLjU4Ny0wLjI0My01LjE5Ni0wLjM3NC03LjgyNS0wLjM3NGMtMTkuMTE0LDAtMzcuNzgsNi43MDUtNTIuNTU2LDE4Ljg3NmMtMTYuMjUzLDEzLjM3Mi01MC41MDgsNTIuMzIxLTc3LjUxMSw5MS45MjYgQzIxLjczLDMyNy4zMzIsMTEuMDUyLDM2MS45ODQsMjUuNjIsMzc5LjY5OGM1Ljk1Myw3LjIyNCwxNS42MjYsMTAuODg2LDI4Ljc1LDEwLjg4NmM1My41NjYsMCwxNjEuMzA4LTYwLjE4NSwxODYuNTk3LTgxLjAxMiBjMTcuMDU3LTE0LjA0MiwyNy42MjEtMzMuODg2LDI5Ljc1MS01NS44NzdMNDU2LjE1LDEwMS4wMTFjOS41NzktNy44NzksMTUuNTExLTE5LjAyLDE2LjcwMi0zMS4zNjkgQzQ3NC4wNDMsNTcuMjkyLDQ3MC4zNSw0NS4yMjEsNDYyLjQ2NywzNS42N3ogTTI1MC44MTUsMjUxLjc1MmMtMS42MTEsMTYuNjgxLTkuNjIyLDMxLjczMi0yMi41Niw0Mi4zODMgYy0yNi4xNjgsMjEuNTUtMTI4Ljc3NSw3Ni40NTEtMTczLjg4NCw3Ni40NTFjLTAuMjMyLDAtMC40NTYtMC4wMDUtMC42ODQtMC4wMDhsMTQ2LjY5OS0xMjEuODg3IGM0LjI0OC0zLjUyOSw0LjgzLTkuODM0LDEuMzAxLTE0LjA4MmMtMy41MjktNC4yNDgtOS44MzUtNC44MzItMTQuMDgyLTEuMzAxTDM5LjU5NywzNTYuMjgzIGMxLjU1NS0xMi4yNTEsMTAuMjgyLTM0LjczMSwzNS4xODgtNzEuMjZjMjUuMTg4LTM2Ljk0Miw1OC40MzktNzUuMTk3LDczLjY5OC04Ny43NTJjMTEuMjA3LTkuMjMyLDI1LjM1Ny0xNC4zMTYsMzkuODQ0LTE0LjMxNiBjMTguODM5LDAsMzYuNDk2LDguMzMzLDQ4LjQ1MywyMi44NzJDMjQ3LjQ0MSwyMTguNzYsMjUyLjQyNSwyMzUuMDcsMjUwLjgxNSwyNTEuNzUyeiBNMjY5LjQwMiwyMjguODc1IGMtMi42ODYtMTIuOTk3LTguNTAzLTI1LjIzMS0xNy4xODMtMzUuNzYxYy04LjY4Ni0xMC41NjMtMTkuNjYxLTE4LjYzNi0zMS45MTktMjMuNzYybDI1Ljc2OC0yMS4yMTNsNDguMTQ1LDYwLjMwNiBMMjY5LjQwMiwyMjguODc1eiBNNDUyLjk0NSw2Ny43MjFjLTAuNjc5LDcuMDI1LTQuMDUyLDEzLjM2My05LjUwNCwxNy44NDdMMzA5LjY1NCwxOTUuNzMxbC00OC4xNDUtNjAuMzA0TDM5NC40MjgsMjYgYzExLjIyOC05LjI1NiwyNy45MS03LjYzNCwzNy4xNzQsMy42MDJsMTUuNDI1LDE4Ljc4MkM0NTEuNTIxLDUzLjgyNyw0NTMuNjIzLDYwLjY5NSw0NTIuOTQ1LDY3LjcyMXoiLz4gPHBhdGggZD0iTTMzNy40ODMsMzg5LjY3Yy0yOC43NzMtMjEuNjI5LTc2LjI0NC0xNy40MTEtMTQxLjA5MiwxMi41MzZjLTg2LjQ0MiwzOS45MTctMTI4LjI5OCwzNC44MjQtMTQ4LjE5LDIzLjUyMyBjLTE5LjAyMS0xMC44MDctMjEuMjM1LTI5LjE1My0yMS4zMzUtMzAuMDgyYy0wLjUyLTUuNDY2LTUuMzYxLTkuNS0xMC44MzItOS4wMTNjLTUuNTAxLDAuNDg0LTkuNTY4LDUuMzM2LTkuMDg1LDEwLjgzOCBjMC4xMDUsMS4xODIsMi44NywyOS4xMzIsMzAuODY1LDQ1LjM1NWMzNC44MTcsMjAuMTc3LDkwLjk5MiwxMi42MTksMTY2Ljk2MS0yMi40NjRjNTYuNzgtMjYuMjIsOTguNDkzLTMxLjMyMywxMjAuNjI1LTE0Ljc1NCBjMjUuNDk4LDE5LjA4NywxOS40MDQsNjIuNDQ5LDE5LjM0Miw2Mi44NjZjLTAuODMsNS40NiwyLjkyMywxMC41Niw4LjM4MywxMS4zOTFjMC41MSwwLjA3OCwxLjAxNiwwLjExNSwxLjUxNywwLjExNSBjNC44NTgsMCw5LjEyLTMuNTQ3LDkuODczLTguNDk3QzM2NC44NTksNDY5LjIzMSwzNzIuNTA5LDQxNi4wMDEsMzM3LjQ4MywzODkuNjd6Ii8+IDwvZz4gPC9nPiA8L2c+IDwvc3ZnPg=="
+      let ToolbarButton = widget.createButton();
+      ToolbarButton.innerHTML = `<img src="data:image/svg+xml;base64,${toolbarBase64}" width="20" height="20" />`;
+      ToolbarButton.title = "Drawing Menu";
+      ToolbarButton.addEventListener("click", function () {
+        widget.activeChart().executeActionById('drawingToolbarAction');
+      });
+    });
+  };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    renderWidget();
+
+    document.querySelectorAll('.toggleButton-OhcB9eH7').forEach(element => {
+      element.style.display = 'none';
+    });
+  });
+
+
+
+  document.addEventListener('message', function (event) {
+    try {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'CHANGE_SYMBOL' && data.symbol) {
+        currentSymbol = data.symbol;
+        if (widget) widget.setSymbol(currentSymbol, currentInterval, () => {
+        });
+      } else if (data.type === 'CHANGE_INTERVAL' && data.interval) {
+        currentInterval = data.interval;
+        if (widget) widget.setSymbol(currentSymbol, currentInterval, () => {
+        });
+      } else if (data.type === 'TOGGLE_TOOLBAR') {
+
+      } else if (data.type === 'TOGGLE_THEME') {
+        theme = (theme === 'dark') ? 'light' : 'dark';
+        renderWidget();
+      }
+
+    } catch (err) {
+      console.error("Message parsing failed:", err);
+    }
+  });
+</script>
+</body>
+</html>
